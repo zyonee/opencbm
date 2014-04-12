@@ -27,6 +27,7 @@
 #define BUMBLEB                 1
 #define ZOOMFLOPPY              2
 #define OLIMEX                  3
+#define TEENSY2                 4
 
 #if MODEL == USBKEY
 #include "cpu-usbkey.h"
@@ -40,6 +41,9 @@
 #elif MODEL == ZOOMFLOPPY
 #include "cpu-zoomfloppy.h"
 #include "board-zoomfloppy.h"
+#elif MODEL == TEENSY2
+#include "cpu-teensy2.h"
+#include "board-teensy2.h"
 #endif
 
 #include "xum1541_types.h"      // Version and protocol definitions

@@ -245,6 +245,31 @@ Port C (parallel):
 10 data0
 
 
+Teensy 2.0 model
+================
+The PJRC Teensy 2.0 is a very small, low-cost board with an ATMEGA32U4
+controller. It's available from http://www.pjrc.com/teensy/
+
+No additional components are required - all the IEC lines can be soldered
+directly to the board:
+
+    PF0     DATA
+    PF1     CLK
+    PF4     ATN
+    PF5     SRQ
+    PF6     RESET
+
+    PB0..7  DATA 0..7  optional parallel connections
+
+    PD6     LED        already on the board
+
+    PD2     RXD1       UART for debug output
+    PD3     TXD1       (optional, under #ifdef DEBUG)
+
+The Teensy also comes with a built-in "HalfKay" Bootloader and it's
+own firmware update utility. See PRJC's homepage for details.
+
+
 Other models
 ============
 I expect others will offer custom or prepackaged boards based on this
@@ -266,7 +291,7 @@ Improvements:
 - Add SRQ nibbling support
 - Update firmware utility to do DFU and check device version/type so it is
   impossible to write the wrong firmware and easier for users to upgrade.
-- Integrate Teensy support, factor out timer routines to common file
+- Factor out timer routines to common file
 - Add support to program in a serial number to EEPROM
 - Improve LEDs, especially on USBKEY (which has 4)
 - Debug printing via the UART is not supported on ZoomFloppy since it has
