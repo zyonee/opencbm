@@ -270,6 +270,35 @@ The Teensy also comes with a built-in "HalfKay" Bootloader and it's
 own firmware update utility. See PRJC's homepage for details.
 
 
+Arduino Pro Micro model
+=======================
+The Arduino Pro Micro is a very small, low-cost board with an ATMEGA32U4
+controller. It is available in various places. Compatible clones exist on
+ebay.com and other places.
+
+No additional components are required - all the IEC lines can be soldered
+directly to the board:
+
+    PB2 (16)   DATA
+    PB3 (14)   CLK
+    PB4 (8)    ATN
+    PB5 (9)    SRQ
+    PB6 (10)   RESET
+
+    PD0 (3)    DATA0 (optional parallel connection)
+    PD1 (2)    DATA1 (optional parallel connection)
+    PD2 (RXI)  DATA2 (optional parallel connection)
+    PD3 (TXO)  DATA3 (optional parallel connection)
+    PF4 (A3)   DATA4 (optional parallel connection)
+    PF5 (A2)   DATA5 (optional parallel connection)
+    PF6 (A1)   DATA6 (optional parallel connection)
+    PF7 (A0)   DATA7 (optional parallel connection)
+
+    PD5        LED     already on the board
+
+    PD2        RXD1    UART for debug output
+    PD3        TXD1    (optional, under #ifdef DEBUG)
+
 Other models
 ============
 I expect others will offer custom or prepackaged boards based on this
