@@ -276,14 +276,22 @@ The Arduino Pro Micro is a very small, low-cost board with an ATMEGA32U4
 controller. It is available in various places. Compatible clones exist on
 ebay.com and other places.
 
-No additional components are required - all the IEC lines can be soldered
-directly to the board:
+No additional components are required (unless you're building the 7406 version
+which is closer to the original ZoomFloppy design and supports SRQ nibbling)
+all the IEC lines can be soldered directly to the board:
 
     PB2 (16)   DATA
     PB3 (14)   CLK
     PB4 (8)    ATN
     PB5 (9)    SRQ
     PB6 (10)   RESET
+
+  IN pins only for 7406 model
+    PC6 (5)    DATA IN
+    PB1 (15)   CLK IN
+    PE6 (7)    ATN IN
+    PD4 (4)    SRQ IN
+    PD7 (6)    RESET IN
 
     PD0 (3)    DATA0 (optional parallel connection)
     PD1 (2)    DATA1 (optional parallel connection)

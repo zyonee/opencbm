@@ -7,8 +7,8 @@ VendorName  = "OpenCBM development team"
 SourceName  = "XUM1541 Libusb-Win32 Driver Installation Disk"
 DeviceGUID  = "{04ECF226-1023-4259-B25C-15E904D846DE}"
 
-DeviceName  = "XUM1541 USB floppy adapter (PROMICRO-v07)"
-DeviceID    = VID_16d0&PID_0504&REV_05000607
+DeviceName  = "XUM1541 USB floppy adapter (PROMICRO_7406-v07)"
+DeviceID    = VID_16d0&PID_0504&REV_0607
 
 [Version]
 Signature   = "$Windows NT$"

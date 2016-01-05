@@ -18,8 +18,9 @@
 # OLIMEX: Olimex dev board with 8 MHz AT90USB162 cpu and IEC daughtercard
 # TEENSY: Teensy 2.0 USB Development Board with 16 MHz ATMEGA32U4 cpu
 # PROMICRO: Arduino Pro Micro USB Development Board with 16 MHz ATMEGA32U4 cpu
+# PROMICRO_7406: Arduino Pro Micro USB Development Board with 16 MHz ATMEGA32U4 with a 7406
 
-MODELS= USBKEY ZOOMFLOPPY BUMBLEB OLIMEX TEENSY2 PROMICRO
+MODELS= USBKEY ZOOMFLOPPY BUMBLEB OLIMEX TEENSY2 PROMICRO PROMICRO_7406
 .PHONY: $(MODELS)
 
 # Enable to get debug printing via the UART (port D)
@@ -69,6 +70,11 @@ CPUMODEL=	atmega32u4
 CPURATE=	16000000
 BOARD=		BOARD_PROMICRO
 BOARD_OBJS=	board-promicro.o
+else ifeq ($(MODEL),PROMICRO_7406)
+CPUMODEL=	atmega32u4
+CPURATE=	16000000
+BOARD=		BOARD_PROMICRO_7406
+BOARD_OBJS=	board-promicro_7406.o
 endif
 
 # Final name for firmware hex file
