@@ -40,7 +40,7 @@ build-stamp: configure-stamp
 	dh_testdir
 
 	# Add here commands to compile the package.
-	$(MAKE) -C opencbm -f LINUX/Makefile all-doc
+	$(MAKE) -f LINUX/Makefile all-doc
 
 	touch build-stamp
 
@@ -50,7 +50,7 @@ clean:
 	rm -f build-stamp configure-stamp
 
 	# Add here commands to clean up after the build process.
-	-$(MAKE) -C opencbm -f LINUX/Makefile mrproper
+	-$(MAKE) -f LINUX/Makefile mrproper
 
 	dh_clean
 
@@ -65,7 +65,7 @@ install: build
 
 	# Add here commands to install the package into debian/tmp
 
-	$(MAKE) -C opencbm -f LINUX/Makefile \
+	$(MAKE) -f LINUX/Makefile \
 		DESTDIR=$(CURDIR)/debian/tmp \
 		PREFIX=/usr \
 		PLUGINDIR=/usr/lib/opencbm/plugin \
@@ -82,12 +82,6 @@ install: build
 		debian/tmp/usr/lib/opencbm
 	install -D -o root -g root -m 755 debian/install_plugin.sh \
 		debian/tmp/usr/lib/opencbm
-
-	install -D -o root -g root -m 644 xu1541/udev/45-opencbm.rules \
-		debian/tmp/etc/udev/rules.d
-
-	install -D -o root -g root -m 644 xum1541/udev/45-opencbm-usb.rules \
-		debian/tmp/etc/udev/rules.d
 
 	mkdir -p debian/tmp/usr/src/modules/opencbm/debian
 	for f in debian/copyright debian/changelog debian/*.MODULE; \

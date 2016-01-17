@@ -16,6 +16,11 @@ DVI  = opencbm.dvi
 INFO = opencbm.info
 HTML = html/opencbm.html
 
+EPSFILES  = zadig-uac.eps zadig-listalldevices.eps zadig-xum1541.eps zadig-xu1541.eps zadig-success.eps opencbm-software-installed.eps opencbm-software-installed-uninstall.eps
+
+EPS  = $(EPSFILES)
+PNG  = $(addsuffix .png, $(basename $(EPSFILES)))
+
 %.win.txt: %.txt
 	sed -e 's/.//g;' -e 's/\[[0-9]*m//g;' $< > $@
 	unix2dos $@
@@ -27,13 +32,19 @@ else
 	${LINUXDOCTXT} ${LINUXDOCTXTPARAM} $<
 endif
 
+%.eps: figures/%.eps.gz
+	gzip -d -c $< > $@
+
+%.png: figures/%.png
+	cp -p $< $@
+
 %.pdf: %.ps
 	ps2pdf $<
 
 %.ps: %.dvi
 	dvips -o $*.ps $<
 
-%.dvi: %.sgml
+%.dvi: %.sgml ${EPS} ${PNG}
 ifeq "${CREATELINUXDOC}" ""
 	CREATELINUXDOC=1 ${MAKE} --silent -f LINUX/Makefile $@
 else
@@ -54,6 +65,7 @@ ifeq "${CREATELINUXDOC}" ""
 	CREATELINUXDOC=1 ${MAKE} --silent -f LINUX/Makefile $@
 else
 	cd html; ${LINUXDOCHTML} ${LINUXDOCHTMLPARAM} -s 2 ../$<; cd ..
+	cp -p ${PNG} html/
 endif
 
 all: $(TXT) $(DVI) $(INFO) $(HTML) ${PDF}
@@ -73,6 +85,7 @@ mrproper: clean
 	rm -f *~ LINUX/*~ WINDOWS/*~
 
 install-files:
+	install -d $(DESTDIR)$(INFODIR)
 	gzip -c9 $(INFO) > $(DESTDIR)$(INFODIR)/$(INFO).gz
 
 install: install-files
