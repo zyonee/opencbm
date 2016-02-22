@@ -87,23 +87,28 @@ $(call CREATE_TARGET,$(SUBDIRS) $(SUBDIRS_OPTIONAL),install-files):: install-fil
 install-files.prepare: opencbm
 	mkdir -p -m 755 $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(MANDIR) $(DESTDIR)$(INCDIR) $(DESTDIR)$(INFODIR)
 ifeq "$(OS)" "Linux"
+ifneq "$(MODDIR)" ""
 	mkdir -p -m 755 $(DESTDIR)$(MODDIR)
-endif 
+endif
+endif
 
 install: install-files
 
 install-all: install install-plugin
 
 install-plugin-xu1541: $(call CREATE_TARGET,$(SUBDIRS_PLUGIN_XU1541),install)
+ifeq "$(OS)" "Linux"
 	install -m 644 xu1541/udev/45-opencbm-xu1541.rules ${DESTDIR}/etc/udev/rules.d/
-
+endif
 	install -d $(DESTDIR)$(PLUGINDIR)/xu1541
 	install -m 755 xu1541/misc/usb_echo_test xu1541/misc/read_event_log ${DESTDIR}/${PLUGINDIR}/xu1541/
 
 $(call CREATE_TARGET,$(SUBDIRS_PLUGIN_XU1541),install):: plugin-xu1541
 
 install-plugin-xum1541: $(call CREATE_TARGET,$(SUBDIRS_PLUGIN_XUM1541),install)
+ifeq "$(OS)" "Linux"
 	install -m 644 xum1541/udev/45-opencbm-xum1541.rules ${DESTDIR}/etc/udev/rules.d/
+endif
 
 $(call CREATE_TARGET,$(SUBDIRS_PLUGIN_XUM1541),install):: plugin-xum1541
 
