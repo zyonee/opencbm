@@ -113,7 +113,7 @@ iec_get(uint8_t line)
         break;
     default:
         // Invalid set of requested signals, trigger WD reset
-        for (;;) ;
+        ret = 0; break;
     }
 
     return !ret;
