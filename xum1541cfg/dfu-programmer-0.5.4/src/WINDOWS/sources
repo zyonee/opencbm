@@ -1,5 +1,5 @@
 TARGETNAME=dfu-programmer
-TARGETPATH=../../../bin
+TARGETPATH=../../../../bin
 TARGETTYPE=LIBRARY
 
 TARGETLIBS=$(SDK_LIB_PATH)/kernel32.lib \
@@ -15,3 +15,5 @@ UMTYPE=console
 #UMBASE=0x100000
 
 USE_MSVCRT=1
+
+C_DEFINES = $(C_DEFINES) /DNOC99
