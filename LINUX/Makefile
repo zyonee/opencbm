@@ -10,18 +10,28 @@ SUBDIRS  = opencbm/include opencbm/arch/$(OS_ARCH) opencbm/libmisc opencbm/lib \
            opencbm/cbmctrl opencbm/cbmformat opencbm/cbmforng opencbm/d64copy opencbm/cbmcopy \
 	   opencbm/d82copy opencbm/imgcopy \
            opencbm/demo/flash opencbm/demo/morse opencbm/demo/rpm1541 \
-	   opencbm/sample/libtrans
+	   opencbm/sample/libtrans opencbm/sample/testlines
 ifeq "$(OS)" "Linux"
 SUBDIRS += opencbm/compat
 endif
 
 SUBDIRS_DOC = opencbm/docs
 
+ifeq ($(strip $(HAVE_LIBUSB)),)
+SUBDIRS_PLUGIN_XU1541 =
+
+SUBDIRS_PLUGIN_XUM1541 =
+else
 SUBDIRS_PLUGIN_XU1541 = opencbm/lib/plugin/xu1541
 
 SUBDIRS_PLUGIN_XUM1541 = opencbm/lib/plugin/xum1541 xum1541cfg
+endif
 
+ifeq ($(strip $(HAVE_KERNEL_SOURCE)),)
+SUBDIRS_PLUGIN_XA1541 =
+else
 SUBDIRS_PLUGIN_XA1541 = opencbm/lib/plugin/xa1541 opencbm/sys/linux/
+endif
 
 SUBDIRS_OPTIONAL = opencbm/addon opencbm/nibtools opencbm/mnib36 opencbm/cbmrpm41 opencbm/cbmlinetester
 
@@ -98,7 +108,7 @@ install-all: install install-plugin
 
 install-plugin-xu1541: $(call CREATE_TARGET,$(SUBDIRS_PLUGIN_XU1541),install)
 ifeq "$(OS)" "Linux"
-	install -m 644 xu1541/udev/45-opencbm-xu1541.rules ${DESTDIR}/etc/udev/rules.d/
+	install -m 644 xu1541/udev/45-opencbm-xu1541.rules ${DESTDIR}$(UDEVRULESDIR)
 endif
 	install -d $(DESTDIR)$(PLUGINDIR)/xu1541
 	install -m 755 xu1541/misc/usb_echo_test xu1541/misc/read_event_log ${DESTDIR}/${PLUGINDIR}/xu1541/
@@ -107,7 +117,7 @@ $(call CREATE_TARGET,$(SUBDIRS_PLUGIN_XU1541),install):: plugin-xu1541
 
 install-plugin-xum1541: $(call CREATE_TARGET,$(SUBDIRS_PLUGIN_XUM1541),install)
 ifeq "$(OS)" "Linux"
-	install -m 644 xum1541/udev/45-opencbm-xum1541.rules ${DESTDIR}/etc/udev/rules.d/
+	install -m 644 xum1541/udev/45-opencbm-xum1541.rules ${DESTDIR}$(UDEVRULESDIR)
 endif
 
 $(call CREATE_TARGET,$(SUBDIRS_PLUGIN_XUM1541),install):: plugin-xum1541
@@ -142,9 +152,9 @@ $(call CREATE_TARGET,$(SUBDIRS_PLUGIN_XA1541),all):: opencbm
 plugin: $(PLUGINS)
 
 uninstall: $(call CREATE_TARGET,$(SUBDIRS_ALL_NON_OPTIONAL) $(SUBDIRS_OPTIONAL),uninstall)
-	rm ${DESTDIR}/etc/udev/rules.d/45-opencbm-xa1541.rules \
-	   ${DESTDIR}/etc/udev/rules.d/45-opencbm-xu1541.rules \
-	   ${DESTDIR}/etc/udev/rules.d/45-opencbm-xum1541.rules \
+	rm ${DESTDIR}$(UDEVRULESDIR)/45-opencbm-xa1541.rules \
+	   ${DESTDIR}$(UDEVRULESDIR)/45-opencbm-xu1541.rules \
+	   ${DESTDIR}$(UDEVRULESDIR)/45-opencbm-xum1541.rules \
 	   ${DESTDIR}/etc/ld.so.conf.d/99-opencbm.conf \
 	   ${DESTDIR}/${PLUGINDIR}/xu1541/usb_echo_test \
 	   ${DESTDIR}/${PLUGINDIR}/xu1541/read_event_log \

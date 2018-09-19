@@ -21,22 +21,22 @@ endif
 # mandatory if you want to hack any of the 6502 sources.
 #
 #XASS        = xa
-XASS        = cl65
+XASS         = cl65
 
 
 #
 # Default destination directories
 #
-PREFIX      = /usr/local
-ETCDIR      = $(PREFIX)/etc
-BINDIR      = $(PREFIX)/bin
-LIBDIR      = $(PREFIX)/lib
-MANDIR      = $(PREFIX)/man/man1
-INFODIR     = $(PREFIX)/info
-INCDIR      = $(PREFIX)/include
-MODDIR      = ${shell for d in /lib/modules/`uname -r`/extra /lib/modules/`uname -r`/misc /lib/modules/`uname -r`/kernel/drivers/char; do test -d $$d && echo $$d; done | head -n 1}
-PLUGINDIR   = $(PREFIX)/lib/opencbm/plugin/
-UDEV_RULES  = /etc/udev/rules.d/
+PREFIX       = /usr/local
+ETCDIR       = $(PREFIX)/etc
+BINDIR       = $(PREFIX)/bin
+LIBDIR       = $(PREFIX)/lib
+MANDIR       = $(PREFIX)/man/man1
+INFODIR      = $(PREFIX)/info
+INCDIR       = $(PREFIX)/include
+MODDIR       = ${shell for d in /lib/modules/`uname -r`/extra /lib/modules/`uname -r`/misc /lib/modules/`uname -r`/kernel/drivers/char; do test -d $$d && echo $$d; done | head -n 1}
+PLUGINDIR    = $(PREFIX)/lib/opencbm/plugin/
+UDEVRULESDIR = /etc/udev/rules.d/
 
 #
 # Where to find the xum1541 and xu1541 firmware
@@ -59,7 +59,7 @@ OS = $(shell uname -s)
 #
 # compiler/linker flags. Should be ok.
 #
-OS_ARCH     = linux
+OS_ARCH      = linux
 
 CFLAGS       = -O2 -Wall -I../include -I../include/LINUX -DPREFIX=\"$(PREFIX)\" -DOPENCBM_CONFIG_FILE=\"$(OPENCBM_CONFIG_FILE)\"
 CFLAGS      += $(USER_CFLAGS)
@@ -88,7 +88,22 @@ KERNEL_SOURCE = ${shell for d in /lib/modules/`uname -r`/build /usr/src/linux; d
 #
 # Find out if we should include linux/autoconf.h or linux/conf.h in the kernel module
 #
-KERNEL_INCLUDE_CONFIG = ${shell for c in ${KERNEL_SOURCE}/include/linux/autoconf.h ${KERNEL_SOURCE}/include/linux/config.h; do test -f $$c && echo $$c; done | head -n 1}
+ifneq ($(strip $(KERNEL_SOURCE)),)
+  HAVE_KERNEL_SOURCE=-DHAVE_KERNEL_SOURCE=1
+  KERNEL_INCLUDE_CONFIG = ${shell for c in ${KERNEL_SOURCE}/include/linux/autoconf.h ${KERNEL_SOURCE}/include/linux/config.h; do test -f $$c && echo $$c; done | head -n 1}
+  KERNEL_HAVE_LINUX_SCHED_SIGNAL_H = ${shell test -e ${KERNEL_SOURCE}/include/linux/sched/signal.h && echo -DHAVE_LINUX_SCHED_SIGNAL_H=1}
+endif
+
+HAVE_LIBUSB0_USB_H = ${shell test -e /usr/include/usb.h && echo -DHAVE_LIBUSB0_USB_H=1}
+HAVE_LIBUSB1_LIBUSB_H = ${shell test -e /usr/include/libusb-1.0/libusb.h && echo -DHAVE_LIBUSB1_LIBUSB_H=1}
+
+ifneq ($(strip $(HAVE_LIBUSB0_USB_H)),)
+  HAVE_LIBUSB=-DHAVE_LIBUSB=1
+endif
+
+ifneq ($(strip $(HAVE_LIBUSB1_LIBUSB_H)),)
+  HAVE_LIBUSB=-DHAVE_LIBUSB=1
+endif
 
 #
 # kernel driver compile flags.
@@ -100,7 +115,7 @@ KERNEL_INCLUDE_CONFIG = ${shell for c in ${KERNEL_SOURCE}/include/linux/autoconf
 #   XE1541-like cable. Don't to it. Upgrade to XM1541 instead.
 #
 #KERNEL_FLAGS = -DDIRECT_PORT_ACCESS
-KERNEL_FLAGS = ${KERNEL_DEFINE}
+KERNEL_FLAGS = "${KERNEL_DEFINE} ${KERNEL_HAVE_LINUX_SCHED_SIGNAL_H}"
 
 
 #
