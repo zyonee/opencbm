@@ -47,9 +47,10 @@ XUM1541DIR  = $(RELATIVEPATH)/../xum1541
 #
 # Where to find libusb (libusb.sf.net)
 #
-LIBUSB_CFLAGS  = -I/usr/include
+LIBUSB_CONFIG  = libusb-config
+LIBUSB_CFLAGS  = $(shell $(LIBUSB_CONFIG) --cflags)
 LIBUSB_LDFLAGS =
-LIBUSB_LIBS    = -L/usr/lib -lusb
+LIBUSB_LIBS    = $(shell $(LIBUSB_CONFIG) --libs)
 
 #
 # define os name
@@ -75,6 +76,23 @@ AR           = ar
 LDCONFIG     = /sbin/ldconfig
 OD_FLAGS     = -w8 -txC -v -An
 
+ifeq "$(OS)" "FreeBSD"
+ifneq ($(strip $(SYSDIR)),)
+KERNEL_SOURCE=$(SYSDIR)
+else
+ifneq ($(strip $(SRCTOP)),)
+KERNEL_SOURCE=$(SRCTOP)/sys
+else
+KERNEL_SOURCE=/usr/src/sys
+endif
+endif
+ifneq ($(wildcard $(KERNEL_SOURCE)/Makefile),)
+HAVE_KERNEL_SOURCE=-DHAVE_KERNEL_SOURCE=1
+else
+KERNEL_SOURCE=
+endif
+
+else
 #
 # location of the kernel source directory
 # (removed, use the later implementation instead. I left them in in case the
@@ -116,7 +134,7 @@ endif
 #
 #KERNEL_FLAGS = -DDIRECT_PORT_ACCESS
 KERNEL_FLAGS = "${KERNEL_DEFINE} ${KERNEL_HAVE_LINUX_SCHED_SIGNAL_H}"
-
+endif
 
 #
 # Linux specific settings and modifications
@@ -139,11 +157,14 @@ endif
 ifeq "$(OS)" "Darwin"
 ETCDIR=$(PREFIX)/etc
 
-# Use MacPort's libusb-legacy for now
-LIBUSB_CONFIG  = /opt/local/bin/libusb-legacy-config
+# Use MacPort's libusb-compat for now
+LIBUSB_CONFIG  = /opt/local/bin/libusb-config
 LIBUSB_CFLAGS  = $(shell $(LIBUSB_CONFIG) --cflags)
 LIBUSB_LDFLAGS =
 LIBUSB_LIBS    = $(shell $(LIBUSB_CONFIG) --libs)
+
+# We therefore definitely have a libusb
+HAVE_LIBUSB=-DHAVE_LIBUSB=1
 
 OD_FLAGS  = -txC -v -An
 SHLIB_EXT = dylib

@@ -20,10 +20,10 @@ platforms           darwin
 homepage            https://sourceforge.net/projects/opencbm/
 
 depends_build       port:cc65
-depends_lib         port:libusb-legacy
+depends_lib         port:libusb-compat
 
 fetch.type          git
-git.url             git://git.code.sf.net/p/opencbm/code
+git.url             https://github.com/OpenCBM/OpenCBM.git
 git.branch          master
 
 checksum {}

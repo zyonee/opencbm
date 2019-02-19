@@ -12,6 +12,8 @@
 
 #include "opencbm.h"
 
+#include "cbmctrl.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1200,19 +1202,70 @@ static int do_detect(CBM_FILE fd, OPTIONS * const options)
 {
     unsigned int num_devices;
     unsigned char device;
+    unsigned char device_min = 0xff;
+    unsigned char device_max = 0xff;
     const char *type_str;
 
-    if (skip_options(options))
-        return 1;
-    
+    int parcheck = 0;
+    int verbose = 0;
+    int c;
+    static const char short_options[] = "+pv";
+    static struct option long_options[] =
+    {
+        {"parcheck", no_argument, NULL, 'p' },
+        {"verbose",  no_argument, NULL, 'v' },
+        {NULL,       no_argument, NULL, 0   }
+    };
+
+    // first of all, process the options given
+
+    while ((c = process_individual_option(options, short_options, long_options)) != EOF)
+    {
+        switch (c)
+        {
+        case 'p':
+            parcheck = 1;
+            break;
+
+        case 'v':
+            verbose = 1;
+            break;
+
+        default:
+            return 1;
+        }
+    }
+
+    /* default is 'all' */
+    if (options->argc > 0)
+    {
+        get_argument_char(options, &device_min);
+    }
+
+    if (options->argc > 0)
+    {
+        get_argument_char(options, &device_max);
+    }
+
     if (check_if_parameters_ok(options))
         return 1;
 
+    if (device_min == 0xff) {
+        device_min = 8;
+    }
+
+    if (device_max == 0xff) {
+        device_max = 30;
+    }
+
     num_devices = 0;
 
-    for( device = 8; device < 16; device++ )
+    for( device = device_min; device < device_max + 1; device++ )
     {
         enum cbm_device_type_e device_type;
+        if (verbose) {
+                printf("Checking device %u\n", device);
+        }
         if( cbm_identify( fd, device, &device_type, &type_str ) == 0 )
         {
             enum cbm_cable_type_e cable_type;
@@ -1229,7 +1282,18 @@ static int do_detect(CBM_FILE fd, OPTIONS * const options)
                     break;
 
                 case cbm_ct_xp1541:
-                    cable_str = "(XP1541)";
+                    if ( parcheck ) {
+                        if ( cbm_check_xp1541(fd, device, device_type, cable_type, verbose) == 0 ) {
+                            cable_str = "(XP1541 - ok)";
+                        }
+                        else {
+                            cable_str = "(XP1541 - FAULTY)";
+                        }
+                    }
+                    else {
+                            cable_str = "(XP1541)";
+                    }
+
                     break;
 
                 case cbm_ct_unknown:
@@ -1535,13 +1599,18 @@ static struct prog prog_table[] =
         "reset all drives on the IEC bus",
         "This command performs a (physical) reset of all drives on the IEC bus." },
 
-    {1, "detect"  , PA_UNSPEC,  do_detect  , "",
-        "detect all drives on the IEC bus",
+    {1, "detect"  , PA_UNSPEC,  do_detect  , "[-p|--parcheck] [-v|--verbose] [<device_start> [<device_end>]]",
+        "detect drives on the IEC bus\n",
         "This command tries to detect all drives on the IEC bus.\n"
-        "For this, this command accesses all possible drives and tries to read\n"
-        "some bytes from their memory. If a drive is detected, its name is output.\n"
+        "(or only some if them if <device_start> and <device_end> are given)\n"
+        "For this, this command accesses all possible drives in the range and tries\n"
+        "to read some bytes from their memory. If a drive is detected, its name is\n"
+        "output.\n"
         "Additionally, this routine determines if the drive is connected via a\n"
-        "parallel cable (XP1541 companion cable)." },
+        "parallel cable (XP1541 companion cable).\n"
+        "\n"
+        "Use option --verbose for verbose output.\n"
+        "Use option --parcheck for more thorough testing of the parallel cable.\n" },
 
     {1, "change"  , PA_UNSPEC,  do_change  , "<device>",
         "wait for a disk to be changed in the specified drive",

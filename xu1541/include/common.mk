@@ -2,6 +2,8 @@
 # Makefile
 #
 
+#include ../../opencbm/LINUX/config.make
+
 # call with "export XMINGW=mingw" before if you want to use the MINGW cross compiler
 
 LIB_SUFFIX=.a
@@ -32,9 +34,9 @@ else
  ifeq "$(OS)" "Darwin"
    # MacOS compilation:
 
-   LIBUSB_DIR = $(shell libusb-legacy-config --prefix)
-   LDFLAGS_EXTRA = $(shell libusb-legacy-config --libs)
-   CFLAGS_EXTRA = $(shell libusb-legacy-config --cflags)
+   LIBUSB_DIR = $(shell libusb-config --prefix)
+   LDFLAGS_EXTRA = $(shell libusb-config --libs)
+   CFLAGS_EXTRA = $(shell libusb-config --cflags)
    
  else
    ifeq "$(shell uname -o)" "Cygwin"
@@ -56,7 +58,9 @@ else
      #
      CFLAGS_EXTRA=-mno-cygwin -DWIN
    else
-     LIBUSB_DIR = /usr
+     LIBUSB_DIR = $(shell libusb-config --prefix)
+     LDFLAGS_EXTRA = $(shell libusb-config --libs)
+     CFLAGS_EXTRA = $(shell libusb-config --cflags)
    endif
  endif
 endif
