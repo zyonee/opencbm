@@ -44,13 +44,6 @@ UDEVRULESDIR = /etc/udev/rules.d/
 XU1541DIR   = $(RELATIVEPATH)/../xu1541
 XUM1541DIR  = $(RELATIVEPATH)/../xum1541
 
-#
-# Where to find libusb (libusb.sf.net)
-#
-LIBUSB_CONFIG  = libusb-config
-LIBUSB_CFLAGS  = $(shell $(LIBUSB_CONFIG) --cflags)
-LIBUSB_LDFLAGS =
-LIBUSB_LIBS    = $(shell $(LIBUSB_CONFIG) --libs)
 
 #
 # define os name
@@ -62,7 +55,12 @@ OS = $(shell uname -s)
 #
 OS_ARCH      = linux
 
-CFLAGS       = -O2 -Wall -I../include -I../include/LINUX -DPREFIX=\"$(PREFIX)\" -DOPENCBM_CONFIG_FILE=\"$(OPENCBM_CONFIG_FILE)\"
+ifeq "$(OPENCBM_COMPILE_DEBUG)" ""
+CFLAGS_OC_DEBUG = -O2
+else
+CFLAGS_OC_DEBUG = -ggdb -O0
+endif
+CFLAGS       = $(CFLAGS_OC_DEBUG) -Wall -I../include -I../include/LINUX -DPREFIX=\"$(PREFIX)\" -DOPENCBM_CONFIG_FILE=\"$(OPENCBM_CONFIG_FILE)\"
 CFLAGS      += $(USER_CFLAGS)
 
 LIB_CFLAGS   = $(CFLAGS) -D_REENTRANT
@@ -112,15 +110,21 @@ ifneq ($(strip $(KERNEL_SOURCE)),)
   KERNEL_HAVE_LINUX_SCHED_SIGNAL_H = ${shell test -e ${KERNEL_SOURCE}/include/linux/sched/signal.h && echo -DHAVE_LINUX_SCHED_SIGNAL_H=1}
 endif
 
-HAVE_LIBUSB0_USB_H = ${shell test -e /usr/include/usb.h && echo -DHAVE_LIBUSB0_USB_H=1}
-HAVE_LIBUSB1_LIBUSB_H = ${shell test -e /usr/include/libusb-1.0/libusb.h && echo -DHAVE_LIBUSB1_LIBUSB_H=1}
+HAVE_LIBUSB0 = ${shell pkg-config libusb && echo 1} 
+HAVE_LIBUSB1 = ${shell pkg-config libusb-1.0 && echo 1} 
 
-ifneq ($(strip $(HAVE_LIBUSB0_USB_H)),)
-  HAVE_LIBUSB=-DHAVE_LIBUSB=1
+ifneq ($(strip $(HAVE_LIBUSB0)),)
+  HAVE_LIBUSB=1
+  LIBUSB_CFLAGS=-DHAVE_LIBUSB=1 -DHAVE_LIBUSB0=1 $(shell pkg-config --cflags libusb)
+  LIBUSB_LDFLAGS=
+  LIBUSB_LIBS=$(shell pkg-config --libs libusb)
 endif
 
-ifneq ($(strip $(HAVE_LIBUSB1_LIBUSB_H)),)
-  HAVE_LIBUSB=-DHAVE_LIBUSB=1
+ifneq ($(strip $(HAVE_LIBUSB1)),)
+  HAVE_LIBUSB=1
+  LIBUSB_CFLAGS=-DHAVE_LIBUSB=1 -DHAVE_LIBUSB1=1 -DHAVE_LIBUSB_1_0=1 $(shell pkg-config --cflags libusb-1.0)
+  LIBUSB_LDFLAGS=
+  LIBUSB_LIBS=$(shell pkg-config --libs libusb-1.0)
 endif
 
 #
@@ -149,6 +153,9 @@ endif
 ifeq "$(OS)" "FreeBSD"
 ETCDIR=$(PREFIX)/etc
 OD_FLAGS  = -txC -v -An
+ifneq "$(HAVE_LIBUSB1)" ""
+LIBUSB_LIBS    = -L/usr/local/lib -lusb
+endif
 endif
 
 #

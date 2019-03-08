@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "DLL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /I "../../../../lib/WINDOWS/" /I "../../../../libmisc/WINDOWS/" /I "../" /I "../../../" /I "../../../../include" /I "../../../../include/WINDOWS/" /I "../../../../libmisc/" /I "../../../../../xum1541/" /I "../../../../arch/windows/" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "DLL_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /I "../../../../lib/WINDOWS/" /I "../../../../libmisc/WINDOWS/" /I "../" /I "../../../" /I "../../../../include" /I "../../../../include/WINDOWS/" /I "../../../../libmisc/" /I "../../../../../xum1541/" /I "../../../../arch/windows/" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "DLL_EXPORTS" /D HAVE_LIBUSB0=0 /D HAVE_LIBUSB1=1 /D HAVE_LIBUSB_1_0=1 /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x407 /d "NDEBUG"
@@ -58,7 +58,7 @@ LINK32=link.exe
 OutDir=.\../../../../Release
 SOURCE="$(InputPath)"
 PreLink_Cmds=del "$(OutDir)\opencbm-xum1541.dll"
-PostBuild_Cmds=copy "$(OutDir)\opencbmxum1541.dll" "$(OutDir)\opencbm-xum1541.dll"
+PostBuild_Cmds=copy "$(OutDir)\opencbmxum1541.dll" "$(OutDir)\opencbm-xum1541.dll"	copy "$(OutDir)\..\..\windrv\x86\libusb-1.0.dll" "$(OutDir)\libusb-1.0.dll"
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "opencbmxum1541 - Win32 Debug"
@@ -75,7 +75,7 @@ PostBuild_Cmds=copy "$(OutDir)\opencbmxum1541.dll" "$(OutDir)\opencbm-xum1541.dl
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "DLL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "../../../../lib/WINDOWS/" /I "../../../../libmisc/WINDOWS/" /I "../" /I "../../../" /I "../../../../include" /I "../../../../include/WINDOWS/" /I "../../../../../xum1541/" /I "../../../../arch/windows/" /I "../../../../libmisc/" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "DLL_EXPORTS" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "../../../../lib/WINDOWS/" /I "../../../../libmisc/WINDOWS/" /I "../" /I "../../../" /I "../../../../include" /I "../../../../include/WINDOWS/" /I "../../../../../xum1541/" /I "../../../../arch/windows/" /I "../../../../libmisc/" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "DLL_EXPORTS" /D HAVE_LIBUSB0=0 /D HAVE_LIBUSB1=1 /D HAVE_LIBUSB_1_0=1 /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x407 /d "_DEBUG"
@@ -90,7 +90,7 @@ LINK32=link.exe
 OutDir=.\../../../../Debug
 SOURCE="$(InputPath)"
 PreLink_Cmds=del "$(OutDir)\opencbm-xum1541.dll"
-PostBuild_Cmds=copy "$(OutDir)\opencbmxum1541.dll" "$(OutDir)\opencbm-xum1541.dll"
+PostBuild_Cmds=copy "$(OutDir)\opencbmxum1541.dll" "$(OutDir)\opencbm-xum1541.dll"	copy "$(OutDir)\..\..\windrv\x86\libusb-1.0.dll" "$(OutDir)\libusb-1.0.dll"
 # End Special Build Tool
 
 !ENDIF 
