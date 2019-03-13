@@ -110,14 +110,14 @@ ifneq ($(strip $(KERNEL_SOURCE)),)
   KERNEL_HAVE_LINUX_SCHED_SIGNAL_H = ${shell test -e ${KERNEL_SOURCE}/include/linux/sched/signal.h && echo -DHAVE_LINUX_SCHED_SIGNAL_H=1}
 endif
 
-HAVE_LIBUSB0 = ${shell pkg-config libusb && echo 1} 
+HAVE_LIBUSB0 = ${shell pkg-config libusb-legacy && echo 1} 
 HAVE_LIBUSB1 = ${shell pkg-config libusb-1.0 && echo 1} 
 
 ifneq ($(strip $(HAVE_LIBUSB0)),)
   HAVE_LIBUSB=1
-  LIBUSB_CFLAGS=-DHAVE_LIBUSB=1 -DHAVE_LIBUSB0=1 $(shell pkg-config --cflags libusb)
+  LIBUSB_CFLAGS=-DHAVE_LIBUSB=1 -DHAVE_LIBUSB0=1 $(shell pkg-config --cflags libusb-legacy)
   LIBUSB_LDFLAGS=
-  LIBUSB_LIBS=$(shell pkg-config --libs libusb)
+  LIBUSB_LIBS=$(shell pkg-config --libs libusb-legacy)
 endif
 
 ifneq ($(strip $(HAVE_LIBUSB1)),)
@@ -165,13 +165,30 @@ ifeq "$(OS)" "Darwin"
 ETCDIR=$(PREFIX)/etc
 
 # Use MacPort's libusb-compat for now
-LIBUSB_CONFIG  = /opt/local/bin/libusb-config
-LIBUSB_CFLAGS  = $(shell $(LIBUSB_CONFIG) --cflags)
-LIBUSB_LDFLAGS =
-LIBUSB_LIBS    = $(shell $(LIBUSB_CONFIG) --libs)
+#LIBUSB_CONFIG  = /opt/local/bin/libusb-config
+#LIBUSB_CFLAGS  = $(shell $(LIBUSB_CONFIG) --cflags)
+#LIBUSB_LDFLAGS =
+#LIBUSB_LIBS    = $(shell $(LIBUSB_CONFIG) --libs)
 
 # We therefore definitely have a libusb
-HAVE_LIBUSB=-DHAVE_LIBUSB=1
+#HAVE_LIBUSB=-DHAVE_LIBUSB=1
+
+HAVE_LIBUSB0 = ${shell pkg-config libusb-legacy && echo 1} 
+HAVE_LIBUSB1 = ${shell pkg-config libusb-1.0 && echo 1} 
+
+ifneq ($(strip $(HAVE_LIBUSB0)),)
+  HAVE_LIBUSB=1
+  LIBUSB_CFLAGS=-DHAVE_LIBUSB=1 -DHAVE_LIBUSB0=1 $(shell pkg-config --cflags libusb-legacy)
+  LIBUSB_LDFLAGS=
+  LIBUSB_LIBS=$(shell pkg-config --libs libusb-legacy)
+endif
+
+ifneq ($(strip $(HAVE_LIBUSB1)),)
+  HAVE_LIBUSB=1
+  LIBUSB_CFLAGS=-DHAVE_LIBUSB=1 -DHAVE_LIBUSB1=1 -DHAVE_LIBUSB_1_0=1 $(shell pkg-config --cflags libusb-1.0)
+  LIBUSB_LDFLAGS=
+  LIBUSB_LIBS=$(shell pkg-config --libs libusb-1.0)
+endif
 
 OD_FLAGS  = -txC -v -An
 SHLIB_EXT = dylib
