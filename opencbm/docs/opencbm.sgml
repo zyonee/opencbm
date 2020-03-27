@@ -10,20 +10,23 @@ Arnd Menge <htmlurl url="mailto:arnd(at)jonnz(dot)de" name="arnd(at)jonnz(dot)de
 
 <abstract>
 This document describes the opencbm package, which can be used to control and
-use serial devices as userd by most Commodore (CBM) 8-bit machines.
+use serial devices as used by most Commodore (CBM) 8-bit machines.
 
 The latest version of the document can be found online at <htmlurl
-url="http://opencbm.trikaliotis.net/" name="http://opencbm,trikaliotis.net/">.
+url="http://opencbm.trikaliotis.net/" name="http://opencbm.trikaliotis.net/">.
 
 OpenCBM consists of a kernel module ("driver") for Linux and Windows for cables
 connected via the parallel port, which is almost obsolete on modern PC
-hardware. Additionally, it has support software and tools to access these old
-parallel port based cables as well as more modern USB replacements.
+hardware. Thus, it also includes support for USB based devices, the so-called
+XU1541 and XUM1541 adapters. Additionally, it has support software and tools
+to access these old parallel port based cables as well as the more modern USB
+replacements.
 
 On top of that, a few user space support programs to control and use serial
 devices as used by most Commodore (CBM) 8-bit machines are included.
 
-The document also contains descriptions for the corresponding cables, namely,
+The contains descriptions for the support programs, as well as for the
+corresponding cables, namely,
 the XU1541 adapter, the XUM1541 adapter (a.k.a. "ZoomFloppy"), and the
 XA1541/XM1541 adapter.
 </abstract>
@@ -83,7 +86,7 @@ listen commands of the CBM IEC bus. It has been tested with several 1541,
 1541-II, 1570, 1571 and 1581 drives, and a MPS-1200 printer. 1541 clones like
 the Oceanic OC-118 have also been reported to work.
 
-The following cable types are supported: 
+The following cable types are supported:
 
 <p>
 <itemize>
@@ -122,7 +125,7 @@ damage or data loss caused by it or by any use of it.
 
 <itemize>
 <item>For USB based cables: Any Linux, FreeBSD or MacOS X variant that
-      support libusb-0.1 should be supported. Linux, FreeBSD and Mac OS X
+      support libusb-1.0 should be supported. Linux, FreeBSD and Mac OS X
       have been explicitly tested.
 <item>For parallel port based cables:
       Linux 3.x and 2.6 variants. 2.0, 2.2 and 2.4 might still work, but have
@@ -309,7 +312,7 @@ This is the XM1541 (pins 5 & 6 on the CBM end exchanged)
                        +->|-- 1  Strobe
         4  Clk --------+---- 12  PaperEnd
                        +->|- 14  AutoFeed
-        6  Reset ------+---- 11  Busy	
+        6  Reset ------+---- 11  Busy
                        +->|- 17  SelectIn
         5  Data -------+---- 10  Ack
                        +->|- 16  Init
@@ -386,7 +389,7 @@ url="http://sta.c64.org/xcables.html" name="http://sta.c64.org/xcables.html">)
   <item>Added ECP and EPP support into NT4 driver (allowing XP1541 cable to be used there)
   <item>On reset, do not wait a fixed timeout anymore, just wait until all drives are ready again
   </itemize>
- 
+
  <item>instcbm:
   <itemize>
   <item><it/--lock/, <it/--cabletype/: New options
@@ -583,10 +586,10 @@ especially true if you installed the drivers for the USB device before.
 <item>Now, adjust some settings.
       <itemize>
       <item><bf/XUM1541 + ZoomFloppy only:/ Make sure that zadig tells you it found the "xum1541 floppy adapter", and that it
-      wants to install the libusb-win32 driver. The USB id is 16D0 (vendor) and 0504 (product). 
+      wants to install the WinUSB driver. The USB id is 16D0 (vendor) and 0504 (product).
       Your screen should look like figure <ref id="zadig-xum1541">.
       <item><bf/XU1541 only:/ Make sure that zadig tells you it found the "xu1541", and that it
-      wants to install the libusb-win32 driver. The USB id is 0403 (vendor) and C632 (product).
+      wants to install the WinUSB driver. The USB id is 0403 (vendor) and C632 (product).
       Your screen should look like figure <ref id="zadig-xu1541">.
       </itemize>
 <item>Now, press "install driver".
@@ -682,9 +685,9 @@ some cable types.
 
 <p>
 These two cables are rather easy. In order to compile them, you need the libusb
-packages (libusb 0.1, <it/not/ 1.0) and the corresponding libusb development
+packages (libusb 1.0, <it/not/ 0.1) and the corresponding libusb development
 package. For Debian based systems, it is enough to install the package
-`libusb-dev'.
+`libusb-1.0-0-dev'.
 
 <sect3>XA1541 cable or XM1541 cable
 
@@ -823,8 +826,9 @@ following tips might help you:
 
 <item>For XU1541 and XUM1541 cable:
 <itemize>
-<item>Did you install libusb? You need v0.1, a v1.0 libusb will not work unless
-you install the v0.1 compatibility layer, too.
+<item>Did you install libusb? You need v1.0; a v0.1 libusb will still work
+for the moment, but it is not recommended and will be removed from future
+releases.
 </itemize>
 
 <item>For XA1541 and XM1541 cable:
@@ -1238,7 +1242,7 @@ display version information about OpenCBM.
 remove (uninstall) the driver.
 
 <tag/-u, --update/
-update parameters if driver is already installed. 
+update parameters if driver is already installed.
 
 <tag/-n, --nocopy/
 do not copy the driver files into the system directory. This is not recommended.
@@ -1263,11 +1267,6 @@ display help and exit.
 
 <tag/-V, --version/
 display version information about the xa1541 plugin.
-
-<!--
-<tag/-e, -enumpport/
-re-enumerate the parallel port driver.
--->
 
 <tag/-l, --lpt=*no*/
 set default LPT port to number <it/*no*/. For example, for LPT2, use <it/--lpt=2/.
@@ -1871,7 +1870,7 @@ until the drive has finished formatting and prints the drive status after
 initializing the BAM on standard out.
 
 <tag/-p, --progress/
-Display a hash mark ('#') for each formatted track. Slows formatting down a 
+Display a hash mark ('#') for each formatted track. Slows formatting down a
 bit.
 </descrip>
 
@@ -2007,16 +2006,7 @@ cf. <ref id="note-1571-cbmforng" name="cbmforng Notes for 1571 drives">
 <tag/-s, --status/
 In addition to the informational output of internal values from the formatting
 process, the drive status is displayed.
-<!--
-Womo: As long as the additional informational output is given after
-      formatting, cbmforng does not exit in either case. Therefore
-      the following note does not apply yet.
 
-Display drive status after formatting. Normally, <it/cbmforng/ exits
-after executing the drive code. With this option turned on, <it/cbmforng/
-waits until the drive has finished formatting and prints the drive status
-after initializing the BAM on standard out.
--->
 </descrip>
 
 <sect2>cbmforng Notes for 1571 drives<label id="note-1571-cbmforng">
@@ -2125,12 +2115,12 @@ Set transfermode. Valid modes are:
 </itemize>
 <tt/original/ and <tt/serial1/ should work in any case.
 <tt/serial2/ won't work with more than one device
-connected to the IEC bus, 
+connected to the IEC bus,
 <tt/parallel/ requires an additional XP1541/XP1571 cable.
 
 <p>
 If <tt/auto/ is used, d64copy itself determines the best transfer mode usable
-with the current setup, and uses that one. Thus, you will seldom want to 
+with the current setup, and uses that one. Thus, you will seldom want to
 manually overdrive the <it>transfer mode</it> option.
 
 <tag>-i, --interleave=<it/interleave/</tag>
@@ -2218,7 +2208,7 @@ d64copy -2 -B --transfer=serial1 9 image.d64
 
 <p>
 <it/d82copy/ is a fast disk image transfer (both read and write) program for
-the 8050, 8250 and SFD 1001. 
+the 8050, 8250 and SFD 1001.
 
 <p>
 See also <ref id="d64copy" name="d64copy"> and <ref id="imgcopy"
@@ -2275,7 +2265,7 @@ Set transfermode. Valid modes are:
 
 <p>
 If <tt/auto/ is used, d82copy itself determines the best transfer mode usable
-with the current setup, and uses that one. Thus, you will seldom want to 
+with the current setup, and uses that one. Thus, you will seldom want to
 manually overdrive the <it>transfer mode</it> option.
 
 <p>
@@ -2447,7 +2437,7 @@ Not all modes are supported with all drives!
 
 <p>
 If <tt/auto/ is used, imgcopy itself determines the best transfer mode usable
-with the current setup, and uses that one. Thus, you will seldom want to 
+with the current setup, and uses that one. Thus, you will seldom want to
 manually overdrive the <it>transfer mode</it> option.
 
 <tag>-i, --interleave=<it/interleave/</tag>
@@ -2517,7 +2507,7 @@ Synopsis: <tt/cbmcopy [OPTION]... DEVICE# FILE.../
 <p>
 DEVICE# specifies the drive number for file copy.
 The remaining arguments specify the files to be sent to/read from the disk
-drive. This version supports 
+drive. This version supports
 Raw, PC64 (P00) and T64 files. They are recognized when sending files to the
 disk drive, files read from external devices are always stored as raw binary
 data.
@@ -2568,7 +2558,7 @@ Set transfermode. Valid modes are:
 </itemize>
 <tt/serial1/ should work in any case.
 <tt/serial2/ won't work with more than one device
-connected to the IEC bus, 
+connected to the IEC bus,
 <tt/parallel/ requires a XP1541/XP1571 cable in addition to the XM/XA1541.
 If <tt/auto/ is given, or this option is completely omitted, cbmcopy
 will automatically determine the fastest transfer method possible with the
@@ -2759,256 +2749,6 @@ tarball at <it>opencbm/tape/</it>.
 <p>
 The OpenCBM API is documented as doxygen file. You can find it only on
 <htmlurl url="http://opencbm.trikaliotis.net/doxygen/" name="http://opencbm.trikaliotis.net/doxygen/">
-
-<!--
-<p>
-All communication between the user space applications and the kernel module
-is done with ioctl's. Since ioctl's are quite unportable and hardly provide
-any type-safety, there are a number of wrapper-functions along with a couple
-of convenience functions implemented in <tt/libopencbm.a/ (Linux) or
-<tt/opencbm.dll/ (Windows). The prototypes can be found in the header file
-<tt/opencbm.h/.
-
-<sect1>Preprocessor macros<label id="opencbm-preproc">
-<p>
-
-<itemize>
-<item>#define IEC_DATA 0x01</item>
-<item>#define IEC_CLOCK 0x02</item>
-<item>#define IEC_ATN 0x04</item>
-</itemize>
-
-These defines are used by the <it/cbm_iec_*()/ functions. You will definitely
-need this if you intend to implement your own custom transfer routines. See
-the <tt/libd64copy//<tt/libcbmcopy/ source for more information.
-
-<sect1>Enumeration types<label id="opencbm-enum-types">
-<p>
-
-<itemize>
-<item>enum cbm_device_type_e
-<itemize>
-<item/cbm_dt_unknown/
-<item/cbm_dt_1541/
-<item/cbm_dt_1570/
-<item/cbm_dt_1571/
-<item/cbm_dt_1581/
-</itemize>
-</itemize>
-
-<p>
-<itemize>
-<item>enum cbm_cable_type_e
-<itemize>
-<item/cbm_ct_unknown/
-<item/cbm_ct_none/
-<item/cbm_ct_xp1541/
-</itemize>
-</itemize>
-
-<sect1>Generic types<label id="opencbm-types">
-
-<p>
-<itemize>
-<item>CBM_FILE</item>
-</itemize>
-
-This type is used to take a handle to the CBM driver. Only use this type, as it
-hides the differences between Windows and Linux.
-
-An invalid CBM_FILE has value CBM_FILE_INVALID.
-
-<sect1>Functions<label id="opencbm-functions">
-<p>
-
-(All functions except <tt/cbm_driver_open():/ <it/f/ must be a valid file
-descriptor)
-
-<sect2>Basic I/O<label id="opencbm-basic-functions">
-
-<p><descrip>
-<tag/int cbm_driver_open(CBM_FILE *f, int port);/
-Opens the driver. <tt/port/ isn't used by now and should be 0.
-After successful completion, 0 is returned along with a valid CBM_FILE
-descriptor in <tt/f/.
-
-<tag/void cbm_driver_close(CBM_FILE f);/
-Closes the driver.
-
-<tag/void cbm_lock(CBM_FILE f);/
-The equivalent to <it/cbmctrl lock/. Make sure the parallel port is
-kept locked even if the driver is closed with cbm_driver_close().
-
-<tag/void cbm_unlock(CBM_FILE f);/
-The equivalent to <it/cbmctrl unlock/. Unlock the parallel port as soon is the
-driver is closed with cbm_driver_close().
-
-<tag/int cbm_raw_read(CBM_FILE f, void *buf, size_t size);/
-Retrieve data after <tt/cbm_talk();/. At most <tt/size/ bytes are read.
-Return value is the actual number of bytes read. &lt; indicates an error.
-
-<tag/int cbm_raw_write(CBM_FILE f, const void *buf, size_t size);/
-Send data after <tt/cbm_listen();/. At most <tt/size/ bytes are written,
-Return value is the actual number of bytes written. &lt; indicates an error.
-
-<tag/int cbm_listen(CBM_FILE f, unsigned char dev, unsigned char secadr);/
-Tell device <it/dev/ to listen on secondary channel <it/secadr/.
-Return value is 0 on success, &lt; 0 means error.
-
-<tag/int cbm_talk(CBM_FILE f, unsigned char dev, unsigned char secadr);/
-Tell device <it/dev/ to talk on secondary channel <it/secadr/.
-Return value is 0 on success, &lt; 0 means error.
-
-<tag/int cbm_open(CBM_FILE f, unsigned char dev, unsigned char secadr);/
-Prepare device <it/dev/ for opening a file. This device listens for the file
-name after this call which is normally sent by a call to the
-<it/write()/-function followed by an <it/unlisten()/ call.
-Return value 0 on success, &lt; 0 means error.
-
-<tag/int cbm_close(CBM_FILE f, unsigned char dev, unsigned char secadr);/
-Close file associated with secondary address <it/secadr/ on device <it/dev/.
-Return value 0 on success, &lt; 0 means error.
-
-<tag/int cbm_unlisten(CBM_FILE f);/
-Send unlisten on bus.
-Return value 0 on success, &lt; 0 means error.
-
-<tag/int cbm_untalk(CBM_FILE f);/
-Send untalk on bus.
-Return value 0 on success, &lt; 0 means error.
-
-<tag/int cbm_get_eoi(CBM_FILE f);/
-Get EOI flag after bus read, return value is 0 with no EOI, otherwise 1.
-When EOI is set to 1, the active talker has nothing more to send.
-
-<tag/int cbm_clear_eoi(CBM_FILE f);/
-Reset EOI flag.
-Return value 0 on success, &lt; 0 means error.
-
-<tag/int cbm_reset(CBM_FILE f);/
-Do a hardware reset on all connected devices. Control is returned after
-a 5 second delay.
-</descrip>
-
-<sect2>Low-level port access<label id="opencbm-lowlevel-functions">
-
-<p><descrip>
-<tag/unsigned char cbm_pp_read(CBM_FILE f);/
-Read byte from XP1541/XP1571 bus. No handshaking or such involved.
-
-<tag/void cbm_pp_write(CBM_FILE f, unsigned char c);/
-Write byte to XP1541/XP1571 bus. No handshaking or such involved.
-
-<tag/int cbm_iec_poll(CBM_FILE f);/
-Read status of all bus lines. Return value is a combination of 
-<tt/IEC_ATN/, <tt/IEC_CLOCK/ and <tt/IEC_DATA/.
-
-<tag/int cbm_iec_get(CBM_FILE f, int line);/
-Get (logical) status of line <it/line/.
-
-<tag/void cbm_iec_set(CBM_FILE f, int line);/
-Activate lines <it/line/ (set to 0V).
-<it/line/ can be one of or a combination with OR of any of IEC_DATA, IEC_CLOCK,
-IEC_ATN.
-
-<tag/void cbm_iec_release(CBM_FILE f, int line);/
-Release lines <it/line/ (set to 5V).
-<it/line/ can be one of or a combination with OR of any of IEC_DATA, IEC_CLOCK,
-IEC_ATN.
-
-
-<tag/void cbm_iec_setrelease(CBM_FILE f, int setline, int resetline);/
-Set lines <it/setline/ (set to 0V) and release line <it/releaseline/ (set to
-5V)
-<it/setline/ and <it/resetline/ can each be one of or a combination with OR of
-any of IEC_DATA, IEC_CLOCK, IEC_ATN. If a line is part of both <it/setline/ and
-<it/resetline/, the outcome is undefined.
-
-
-<tag/int cbm_iec_wait(CBM_FILE f, int line, int state);/
-Experimental, do not use.
-</descrip>
-
-<sect2>Helper functions<label id="opencbm-helper-functions">
-
-<p><descrip>
-<tag/int cbm_upload(CBM_FILE f, unsigned char dev, int adr, void *prog, int size);/
-Write <it/prog/ into device <it/dev/'s memory space via a series of <tt/"M-W"/
-commands.
-
-<tag/int cbm_device_status(CBM_FILE f, unsigned char drv, void *buf, int bufsize);/
-Read device status info <it/buf/, at most <it/bufsize/ bytes are read.
-Returns <it/atoi(buf)/.
-
-<tag/int cbm_exec_command(CBM_FILE f, unsigned char drv, void *cmd, int len);/
-Execute command <it/cmd/. Returns number of bytes actually written.
-if <it/len/ is 0, <it/cmd/ is considered a 0-terminated string.
-
-<tag/int cbm_identify(CBM_FILE f, unsigned char drv, enum cbm_device_type_e *t, const char **type_str);/
-Tries to identify the device <it/drv/. The hardware type is returned in <it/t/,
-<it/type_str/ contains a descriptive string which also includes the drives'
-operating system. Both <it/t/ and <it/type_str/ may be <tt/NULL/ in case the
-caller is not interrested in any of both values.<p>
-The return value is <tt/0/ if the device responded to the <tt/"M-R"/ command,
-even if it could not be identified, &lt; 0 indicates error.
-
-<tag/int cbm_identify_xp1541(CBM_FILE f, unsigned char drv, enum cbm_device_type_e *t1, enum cbm_cable_type_e *t2);/
-Tries to identify the device <it/drv/. The hardware type is returned in <it/t1/,
-<it/t2/ contains whether the drive has an parallel (XP1541) cable attached.
-Both <it/t1/ and <it/t2/ may be <tt/NULL/ in case the caller is not interrested
-in any of both values.<p>
-The return value is <tt/0/ if the device responded to the <tt/"M-R"/ command,
-even if it could not be identified, &lt; 0 indicates error.
-
-</descrip>
-
-<sect2>PetSCII functions<label id="opencbm-petscii-functions">
-
-<p><descrip>
-<tag/char cbm_petscii2ascii_c(char character);/
-Converts one character <it/character/ from PetSCII to ASCII.
-
-<tag/char cbm_ascii2petscii_c(char character);/
-Converts one character <it/character/ from ASCII to PetSCII.
-
-<tag/char * cbm_petscii2ascii(char *str);/
-Convert a null-terminated string <it/str/ from PetSCII to ASCII.
-
-<tag/char * cbm_ascii2petscii(char *str);/
-Convert a null-terminated string <it/str/ from ASCII to PetSCII.
-
-</descrip>
-
-<sect2>Parallel Burst functions<label id="opencbm-parburst-functions">
-
-<p><descrip>
-<tag/unsigned char cbm_parallel_burst_read(CBM_FILE f);/
-Support function for mnib. Do not use.
-
-<tag/void cbm_parallel_burst_write(CBM_FILE f, unsigned char c);/
-Support function for mnib. Do not use.
-
-<tag/int cbm_parallel_burst_read_track(CBM_FILE f, unsigned char *buffer, unsigned int length);/
-Support function for mnib. Do not use.
-
-<tag/int cbm_parallel_burst_read_track_var(CBM_FILE f, unsigned char *buffer, unsigned int length);/
-Support function for mnib. Do not use.
-
-<tag/int cbm_parallel_burst_write_track(CBM_FILE f, unsigned char *buffer, unsigned int length);/
-Support function for mnib. Do not use.
-
-</descrip>
-
-<sect2>libd64copy <it/TODO/<label id="opencbm-libd64copy-functions">
-<p>
-Not documented yet. See <it/libd64copy/ and <it/d64copy/ source.<p>
-Types and prototypes are defined in <tt/d64copy.h/.
-
-<sect2>libcbmcopy <it/TODO/<label id="opencbm-libcbmcopy-functions">
-<p>
-Not documented yet. See <it/libcbmcopy/ and <it/cbmcopy/ source.<p>
-Types and prototypes are defined in <tt/cbmcopy.h/.
--->
 
 
 <sect>Known bugs and problems<label id="knownbugs">
