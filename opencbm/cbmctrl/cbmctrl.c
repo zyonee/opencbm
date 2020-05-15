@@ -23,6 +23,15 @@
 #include "arch.h"
 #include "libmisc.h"
 
+#define PRIMARY_ADDRESS_MIN 1
+#define PRIMARY_ADDRESS_MAX 30
+#define SECONDARY_ADDRESS_MIN 0
+#define SECONDARY_ADDRESS_MAX 30
+#define FILENAME_LENGTH_MAX 16
+
+#define STRINGIFY_HELPER(_x) #_x
+#define STRINGIFY(_x) STRINGIFY_HELPER(_x)
+
 typedef
 enum {
     PA_UNSPEC = 0,
@@ -70,13 +79,24 @@ static int check_if_parameters_ok(OPTIONS * const options)
     return 0;
 }
 
-static int get_argument_char(OPTIONS * const options, unsigned char *where)
+static int
+get_argument_int_as_uchar(OPTIONS * const options, unsigned char *where, unsigned int min, unsigned int max, const char * const errortext)
 {
     if (options->argc > 0)
     {
-        *where = arch_atoc(options->argv[0]);
+        int ch;
+        ch = atoi(options->argv[0]);
+
         options->argv++;
         options->argc--;
+
+        if (ch < min || ch > max) {
+            fprintf(stderr, "%s: value %u out of range, allowed range: %u .. %u\n", errortext, ch, min, max);
+            return 1;
+        }
+
+        *where = ch;
+
         return 0;
     }
     else
@@ -84,6 +104,18 @@ static int get_argument_char(OPTIONS * const options, unsigned char *where)
         fprintf(stderr, "Not enough parameters, aborting!\n");
         return 1;
     }
+}
+
+static int
+get_argument_int_as_primary_address(OPTIONS * const options, unsigned char *where)
+{
+    return get_argument_int_as_uchar(options, where, PRIMARY_ADDRESS_MIN, PRIMARY_ADDRESS_MAX, "primary address (device)");
+}
+
+static int
+get_argument_int_as_secondary_address(OPTIONS * const options, unsigned char *where)
+{
+    return get_argument_int_as_uchar(options, where, SECONDARY_ADDRESS_MIN, SECONDARY_ADDRESS_MAX, "secondary address");
 }
 
 static int
@@ -518,8 +550,8 @@ static int do_listen(CBM_FILE fd, OPTIONS * const options)
 
     rv = skip_options(options);
 
-    rv = rv || get_argument_char(options, &unit);
-    rv = rv || get_argument_char(options, &secondary);
+    rv = rv || get_argument_int_as_primary_address(options, &unit);
+    rv = rv || get_argument_int_as_secondary_address(options, &secondary);
 
     if (rv || check_if_parameters_ok(options))
         return 1;
@@ -538,8 +570,8 @@ static int do_talk(CBM_FILE fd, OPTIONS * const options)
 
     rv = skip_options(options);
 
-    rv = rv || get_argument_char(options, &unit);
-    rv = rv || get_argument_char(options, &secondary);
+    rv = rv || get_argument_int_as_primary_address(options, &unit);
+    rv = rv || get_argument_int_as_secondary_address(options, &secondary);
 
     if (rv || check_if_parameters_ok(options))
         return 1;
@@ -612,8 +644,8 @@ static int do_open(CBM_FILE fd, OPTIONS * const options)
         }
     }
 
-    rv = get_argument_char(options, &unit);
-    rv = rv || get_argument_char(options, &secondary);
+    rv = get_argument_int_as_primary_address(options, &unit);
+    rv = rv || get_argument_int_as_secondary_address(options, &secondary);
     rv = rv || get_extended_argument_string(extended, options, &filename, &filenamelen);
 
     if (rv)
@@ -637,8 +669,8 @@ static int do_close(CBM_FILE fd, OPTIONS * const options)
 
     rv = skip_options(options);
 
-    rv = rv || get_argument_char(options, &unit);
-    rv = rv || get_argument_char(options, &secondary);
+    rv = rv || get_argument_int_as_primary_address(options, &unit);
+    rv = rv || get_argument_int_as_secondary_address(options, &secondary);
 
     if (rv || check_if_parameters_ok(options))
         return 1;
@@ -830,7 +862,7 @@ static int do_status(CBM_FILE fd, OPTIONS * const options)
 
     rv = skip_options(options);
 
-    rv = rv || get_argument_char(options, &unit);
+    rv = rv || get_argument_int_as_primary_address(options, &unit);
 
     if (rv || check_if_parameters_ok(options))
         return 1;
@@ -880,7 +912,7 @@ static int do_command(CBM_FILE fd, OPTIONS * const options)
         }
     }
 
-    rv = get_argument_char(options, &unit);
+    rv = get_argument_int_as_primary_address(options, &unit);
     rv = rv || get_extended_argument_string(extended, options, &commandline, &commandlinelen);
 
     if (rv)
@@ -915,28 +947,45 @@ static int do_command(CBM_FILE fd, OPTIONS * const options)
 static int do_dir(CBM_FILE fd, OPTIONS * const options)
 {
     char c, buf[40];
-    unsigned char command[] = { '$', '0' };
+    struct command_spec {
+        char * str;
+        char * filename;
+        unsigned char device; /* device no. 8, 9, 10, 11, ... */
+        unsigned char unit;   /* 0, 1, ... */
+    } command = { NULL, NULL, 0, 0 };
+
     int rv;
-    unsigned char unit;
 
     rv = skip_options(options);
 
-    rv = rv || get_argument_char(options, &unit);
-    /* default is drive '0' */
-    if (options->argc > 0)
-    {
-        rv = rv || get_argument_char(options, command+1);
+    rv = rv || get_argument_int_as_primary_address(options, &command.device);
+
+    if ( !rv && options->argc > 0) {
+        command.filename = options->argv[0];
+        --options->argc;
+
+        if (strlen(command.filename) > FILENAME_LENGTH_MAX) {
+            fprintf(stderr, "filename length is %u, maximum of "
+                            STRINGIFY(FILENAME_LENGTH_MAX) " exceeded!\n",
+                            (unsigned) strlen(command.filename));
+            return 1;
+        }
     }
 
     if (rv || check_if_parameters_ok(options))
         return 1;
 
-    rv = cbm_open(fd, unit, 0, command, sizeof(command));
+    command.str = cbmlibmisc_sprintf("$%s", (command.filename ? command.filename : ""));
+    if (options->petsciiraw == PA_PETSCII) {
+        cbm_ascii2petscii(command.str);
+    }
+
+    rv = cbm_open(fd, command.device, 0, command.str, strlen(command.str));
     if(rv == 0)
     {
-        if(cbm_device_status(fd, unit, buf, sizeof(buf)) == 0)
+        if(cbm_device_status(fd, command.device, buf, sizeof(buf)) == 0)
         {
-            cbm_talk(fd, unit, 0);
+            cbm_talk(fd, command.device, 0);
             if(cbm_raw_read(fd, buf, 2) == 2)
             {
                 while(cbm_raw_read(fd, buf, 2) == 2)
@@ -955,7 +1004,7 @@ static int do_dir(CBM_FILE fd, OPTIONS * const options)
                     }
                 }
                 cbm_untalk(fd);
-                cbm_device_status(fd, unit, buf, sizeof(buf));
+                cbm_device_status(fd, command.device, buf, sizeof(buf));
                 printf("%s", cbm_petscii2ascii(buf));
             }
             else
@@ -968,8 +1017,11 @@ static int do_dir(CBM_FILE fd, OPTIONS * const options)
         {
             printf("%s", cbm_petscii2ascii(buf));
         }
-        cbm_close(fd, unit, 0);
+        cbm_close(fd, command.device, 0);
     }
+
+    cbmlibmisc_strfree(command.str);
+
     return rv;
 }
 
@@ -1006,7 +1058,7 @@ static int do_download(CBM_FILE fd, OPTIONS * const options)
 
     // process the drive number (unit)
 
-    if (get_argument_char(options, &unit))
+    if (get_argument_int_as_primary_address(options, &unit))
         return 1;
 
 
@@ -1102,7 +1154,7 @@ static int do_upload(CBM_FILE fd, OPTIONS * const options)
 
     // process the drive number (unit)
 
-    if (get_argument_char(options, &unit))
+    if (get_argument_int_as_primary_address(options, &unit))
         return 1;
 
 
@@ -1239,12 +1291,12 @@ static int do_detect(CBM_FILE fd, OPTIONS * const options)
     /* default is 'all' */
     if (options->argc > 0)
     {
-        get_argument_char(options, &device_min);
+        get_argument_int_as_primary_address(options, &device_min);
     }
 
     if (options->argc > 0)
     {
-        get_argument_char(options, &device_max);
+        get_argument_int_as_primary_address(options, &device_max);
     }
 
     if (check_if_parameters_ok(options))
@@ -1318,7 +1370,7 @@ static int do_change(CBM_FILE fd, OPTIONS * const options)
 
     rv = skip_options(options);
 
-    rv = rv || get_argument_char(options, &unit);
+    rv = rv || get_argument_int_as_primary_address(options, &unit);
 
     if (rv || check_if_parameters_ok(options))
         return 1;
@@ -1551,11 +1603,12 @@ static struct prog prog_table[] =
         "NOTE: You have to give the commands in lower-case letters.\n"
         "      Upper case will NOT work!\n" },
 
-    {1, "dir"     , PA_PETSCII, do_dir     , "<device> [<drive>]",
+    {1, "dir"     , PA_PETSCII, do_dir     , "<device> [<filespec>]",
         "output the directory of the disk in the specified drive",
         "This command gets the directory of a disk in the drive.\n\n"
-        "<device> is the device number of the drive (bus ID).\n"
-        "<drive> is the drive number of a dual drive (LUN), default is 0." },
+        "<device>   is the device number of the drive (bus ID).\n"
+        "<filespec> can be used to restrict the number of files. wildcards\n"
+        "           are allowed, but drive limitations apply." },
 
     {1, "download", PA_RAW,     do_download, "<device> <adr> <count> [<file>]",
         "download memory contents from the floppy drive",
