@@ -377,6 +377,11 @@ static int imgcopy_set_image_type(imgcopy_settings *settings, const char *filena
         settings->cat_track = D81_CAT_TRACK;
         settings->bam_track = D81_BAM_TRACK;
         break;
+
+       case D64: /* FALL THROUGH */
+       case D71: /* FALL THROUGH */
+       case cbm_it_unknown:
+        break;
     }
 
     settings->block_count = 0;
@@ -407,6 +412,11 @@ int imgcopy_sector_count(imgcopy_settings *setting, int track)
 
        case D81:
         return 40;
+
+       case D64: /* FALL THROUGH */
+       case D71: /* FALL THROUGH */
+       case cbm_it_unknown:
+        break;
     }
     return -1;
 }
@@ -496,7 +506,6 @@ int imgcopy_check_transfer_mode(imgcopy_settings *settings)
     int mode_s1 = imgcopy_get_transfer_mode_index("s1");
     int mode_s2 = imgcopy_get_transfer_mode_index("s2");
     int mode_s3 = imgcopy_get_transfer_mode_index("s3");
-    int mode_p = imgcopy_get_transfer_mode_index("parallel");
 
     switch(settings->image_type)
     {
@@ -667,6 +676,11 @@ int ReadBAM(imgcopy_settings *settings, const transfer_funcs *src, unsigned char
 
        case D81:
         return ReadBAM_81(settings, src, buffer, bam_count);
+
+       case D64: /* FALL THROUGH */
+       case D71: /* FALL THROUGH */
+       case cbm_it_unknown:
+        break;
     }
     return -1;
 }
@@ -860,9 +874,10 @@ static int copy_disk(CBM_FILE fd_cbm, imgcopy_settings *settings,
         case cbm_dt_cbm1571:
         if(settings->warp && (cbm_transf->read_gcr_block == NULL))
         {
-            if(settings->warp>0)
+            if(settings->warp>0) {
                 message_cb(1, "`-w' for this transfer mode ignored");
                 settings->warp = 0;
+            }
         }
         break;
 
@@ -873,9 +888,10 @@ static int copy_disk(CBM_FILE fd_cbm, imgcopy_settings *settings,
         default:
             if(settings->warp)
             {
-                if(settings->warp>0)
+                if(settings->warp>0) {
                     message_cb(1, "drive type doesn't support warp mode");
                     settings->warp = 0;
+                }
             }
         break;
     }

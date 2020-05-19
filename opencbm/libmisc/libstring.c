@@ -254,18 +254,23 @@ char *
 cbmlibmisc_sprintf(const char * const Format, ...)
 {
     va_list arg_ptr;
+    size_t nbytes;
+    char * str;
+
     va_start(arg_ptr, Format);
 
-    size_t nbytes = vsnprintf(NULL, 0, Format, arg_ptr) + 1; /* +1 for the '\0' */
+    nbytes = arch_vsnprintf(NULL, 0, Format, arg_ptr) + 1; /* +1 for the '\0' */
 
-    char *str = cbmlibmisc_stralloc(nbytes);
+    str = cbmlibmisc_stralloc(nbytes);
 
     if (str) {
+        size_t written;
+
         va_end(arg_ptr);
         va_start(arg_ptr, Format);
 
-        size_t written = vsnprintf(str, nbytes, Format, arg_ptr) + 1; /* +1 for the '\0' */
-        if ( (written < 0) || (written > nbytes)) {
+        written = arch_vsnprintf(str, nbytes, Format, arg_ptr) + 1; /* +1 for the '\0' */
+        if (written > nbytes) {
             fprintf(stderr, "possible memory corruption in cbmlibmisc_sprintf(), aborting!\n");
             exit(1);
         }
