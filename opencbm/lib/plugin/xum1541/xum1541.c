@@ -140,7 +140,7 @@ xum1541_cleanup(struct opencbm_usb_handle *HandleXum1541, char *msg, ...)
 
     if (msg != NULL) {
         va_start(args, msg);
-        fprintf(stderr, msg, args);
+        vfprintf(stderr, msg, args);
         va_end(args);
     }
     if (HandleXum1541 != NULL) {
@@ -385,55 +385,51 @@ xum1541_check_version(int version)
    The device's serial number to search for also. It is not considered, if set to 0.
 
   \return
-    0 on success, -1 on error. On error, the handle is cleaned up if it
-    was already active.
-
-  \remark
-    On success, xum1541_handle contains a valid handle to the xum1541 device.
-    In this case, the device configuration has been set and the interface
-    been claimed. xum1541_close() should be called when the user is done
-    with it.
+    device identifier string on success, NULL on error.
 */
 const char *
 xum1541_device_path(int PortNumber)
 {
 #define XUM1541_PREFIX "libusb/xum1541:"
 
-    struct opencbm_usb_handle HandleXum1541;
+    struct opencbm_usb_handle *HandleXum1541;
     static char dev_path[sizeof(XUM1541_PREFIX) + 3 + 1 + 3 + 1];
 
-    HandleXum1541.devh = NULL;
+    HandleXum1541 = malloc(sizeof(struct opencbm_usb_handle));
+    if (HandleXum1541 == NULL) {
+        perror("xum1541_device_path: malloc failed");
+        return NULL;
+    }
+    HandleXum1541->devh = NULL;
 
 #if HAVE_LIBUSB1
-    usb.init(&HandleXum1541.ctx);
+    usb.init(&HandleXum1541->ctx);
 #endif
 
     arch_snprintf(dev_path, sizeof(dev_path), XUM1541_PREFIX);
 
-    if (xum1541_enumerate(&HandleXum1541, PortNumber) < 0) {
+    if (xum1541_enumerate(HandleXum1541, PortNumber) < 0) {
+        free(HandleXum1541);
         return NULL;
     }
 
 
-    if (HandleXum1541.devh != NULL) {
+    if (HandleXum1541->devh != NULL) {
 #if HAVE_LIBUSB0
-        struct usb_device * dev = usb.device(HandleXum1541.devh);
+        struct usb_device * dev = usb.device(HandleXum1541->devh);
         if (dev != NULL) {
             strcpy(dev_path, dev->filename);
         }
 #elif HAVE_LIBUSB1
         arch_snprintf(dev_path, sizeof(dev_path), XUM1541_PREFIX "%d/%d",
-            usb.get_bus_number(usb.get_device(HandleXum1541.devh)),
-            usb.get_device_address(usb.get_device(HandleXum1541.devh)));
+            usb.get_bus_number(usb.get_device(HandleXum1541->devh)),
+            usb.get_device_address(usb.get_device(HandleXum1541->devh)));
 #endif
-        xum1541_close(&HandleXum1541);
     } else {
         fprintf(stderr, "error: no xum1541 device found\n");
     }
 
-#if HAVE_LIBUSB1
-    usb.exit(HandleXum1541.ctx);
-#endif
+    xum1541_close(HandleXum1541);
 
     return dev_path;
 }
@@ -514,7 +510,6 @@ xum1541_init(struct opencbm_usb_handle **HandleXum1541_p, int PortNumber)
     struct opencbm_usb_handle *HandleXum1541;
     unsigned char devInfo[XUM_DEVINFO_SIZE], devStatus;
     int len, ret;
-    int interface_claimed = 0;
     int success = 0;
 
     if (HandleXum1541_p == NULL) {
@@ -547,7 +542,7 @@ xum1541_init(struct opencbm_usb_handle **HandleXum1541_p, int PortNumber)
         usb.exit(HandleXum1541->ctx);
 #endif
         free(HandleXum1541);
-        HandleXum1541 = NULL;
+        *HandleXum1541_p = NULL;
         return -1;
     }
 
@@ -555,24 +550,18 @@ xum1541_init(struct opencbm_usb_handle **HandleXum1541_p, int PortNumber)
         // Select first and only device configuration.
         ret = usb.set_configuration(HandleXum1541->devh, 1);
         if (ret != LIBUSB_SUCCESS) {
-            xum1541_cleanup(HandleXum1541, "USB error: %s\n", usb.error_name(ret));
+            fprintf(stderr, "USB error: %s\n", usb.error_name(ret));
             break;
         }
 
         /*
          * Get exclusive access to interface 0.
-         * After this point, do cleanup using xum1541_close() instead of
-         * xum1541_cleanup().
          */
         ret = usb.claim_interface(HandleXum1541->devh, 0);
         if (ret != LIBUSB_SUCCESS) {
-            xum1541_cleanup(HandleXum1541, "USB error: %s\n", usb.error_name(ret));
+            fprintf(stderr, "USB error: %s\n", usb.error_name(ret));
             break;
         }
-
-#if HAVE_LIBUSB1
-        interface_claimed = 1;
-#endif
 
         // Check the basic device info message for firmware version
         memset(devInfo, 0, sizeof(devInfo));
@@ -630,11 +619,8 @@ xum1541_init(struct opencbm_usb_handle **HandleXum1541_p, int PortNumber)
 
     /* error cleanup */
     if (!success) {
-        if (interface_claimed) {
-            usb.release_interface(HandleXum1541->devh, 0);
-        }
-
         xum1541_close(HandleXum1541);
+        *HandleXum1541_p = NULL;
     }
 
     return success ? 0 : -1;
@@ -654,27 +640,36 @@ xum1541_close(struct opencbm_usb_handle *HandleXum1541)
 
     xum1541_dbg(0, "Closing USB link");
 
+    if (HandleXum1541->devh != NULL) {
 #if HAVE_LIBUSB0
-    ret = usb.control_msg(HandleXum1541->devh, USB_TYPE_CLASS | USB_ENDPOINT_OUT,
-        XUM1541_SHUTDOWN, 0, 0, NULL, 0, 1000);
+        ret = usb.control_msg(HandleXum1541->devh, USB_TYPE_CLASS | USB_ENDPOINT_OUT,
+            XUM1541_SHUTDOWN, 0, 0, NULL, 0, 1000);
 #elif HAVE_LIBUSB1
-    ret = usb.control_transfer(HandleXum1541->devh, LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_ENDPOINT_OUT,
-        XUM1541_SHUTDOWN, 0, 0, NULL, 0, 1000);
+        ret = usb.control_transfer(HandleXum1541->devh, LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_ENDPOINT_OUT,
+            XUM1541_SHUTDOWN, 0, 0, NULL, 0, 1000);
 #endif
-    if (ret < 0) {
-        fprintf(stderr,
-            "USB request for XUM1541 close failed, continuing: %s\n",
-            usb.error_name(ret));
-    }
-    ret = usb.release_interface(HandleXum1541->devh, 0);
-    if (ret != LIBUSB_SUCCESS)
-        fprintf(stderr, "USB release intf error: %s\n", usb.error_name(ret));
+        if (ret < 0) {
+            fprintf(stderr,
+                "USB request for XUM1541 close failed, continuing: %s\n",
+                usb.error_name(ret));
+        }
+        ret = usb.release_interface(HandleXum1541->devh, 0);
 
+    usb.set_configuration(HandleXum1541->devh, -1);
 #if HAVE_LIBUSB0
-    if (usb.close(HandleXum1541->devh) != LIBUSB_SUCCESS)
-        fprintf(stderr, "USB close error: %s\n", usb.strerror());
+        // ENOENT could mean the interface was never claimed
+        if (ret != LIBUSB_SUCCESS && ret != -ENOENT)
+        fprintf(stderr, "USB release intf error: %d %s\n", ret, usb.error_name(ret));
+        if (usb.close(HandleXum1541->devh) != LIBUSB_SUCCESS)
+            fprintf(stderr, "USB close error: %s\n", usb.strerror());
 #elif HAVE_LIBUSB1
-    usb.close(HandleXum1541->devh);
+        // LIBUSB_ERROR_NOT_FOUND means the interface was never claimed
+        if (ret != LIBUSB_SUCCESS && ret != LIBUSB_ERROR_NOT_FOUND)
+            fprintf(stderr, "USB release intf error: %d %s\n", ret, usb.error_name(ret));
+        usb.close(HandleXum1541->devh);
+    }
+#endif
+#if HAVE_LIBUSB1
     usb.exit(HandleXum1541->ctx);
 #endif
 
