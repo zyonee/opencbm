@@ -23,8 +23,8 @@
 # MINIMUS32: (unsupported) Minimus AVR 32K USB development board with 16 MHz ATmega32U2 cpu with 32K flash
 
 MODELS= USBKEY ZOOMFLOPPY BUMBLEB OLIMEX TEENSY2 PROMICRO PROMICRO_7406 MINIMUS MINIMUS32
-MODELS_TO_COMPILE= ZOOMFLOPPY PROMICRO PROMICRO_7406
-.PHONY: $(MODELS)
+MODELS_SUPPORTED= ZOOMFLOPPY PROMICRO PROMICRO_7406
+.PHONY: $(MODELS) all unsupported
 
 # Enable to get debug printing via the UART (port D)
 #CFLAGS=    -DDEBUG -DDEBUG_LEVEL=DBG_INFO
@@ -34,7 +34,9 @@ MODELS_TO_COMPILE= ZOOMFLOPPY PROMICRO PROMICRO_7406
 # Firmware version. Bump when changing the firmware code.
 XUMFW_VERSION= 08
 
-all: $(MODELS_TO_COMPILE)
+all: $(MODELS_SUPPORTED)
+
+unsupported: $(MODELS)
 
 define MAKE_model
 $1:
@@ -94,7 +96,7 @@ endif
 MODELVERSION= xum1541-$(MODEL)-v$(XUMFW_VERSION)
 
 # Resulting full revision number for model and firmware version
-REVISION=$(shell grep '\#define $(MODEL)' xum1541.h | sed 's/\#define $(MODEL)//' | xargs printf "%02X")$(XUMFW_VERSION)
+REVISION=$(shell grep '\#define $(MODEL) ' xum1541.h | sed 's/\#define $(MODEL)//' | xargs printf "%02X")$(XUMFW_VERSION)
 
 # git revision or "unknown" if either not a git repo or git command unavailable
 GITREV=$(shell git describe --always --exclude '*' || echo 'unknown')
