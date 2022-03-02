@@ -14,7 +14,7 @@ setlocal enabledelayedexpansion
 
 set OC_SOURCE_PATH=%~dp0
 
-set OC_VERSION=0.4.99.103
+set OC_VERSION=0.4.99.104
 set OC_INSTALLED_SIZE_IN_KB_AMD64=1500
 set OC_INSTALLED_SIZE_IN_KB_I386=2000
 
@@ -146,7 +146,7 @@ if %OC_INSTALL_ELEVATED% EQU 0 (
 	rem fsutil dirty query %SYSTEMDRIVE% >nul 2>&1
 	rem
 	rem sfc should work up to 2000, and also on PE
-	sfc 2>nul | find /i "/" >nul
+	sfc 2>&1 | find /i "/" >nul
 
 	if !errorlevel! EQU 0 (
 		rem echo We have administrative rights
