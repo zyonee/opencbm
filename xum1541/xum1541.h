@@ -91,10 +91,9 @@
 
 // Status levels to notify the user (e.g. LEDS)
 #define STATUS_INIT             0
-#define STATUS_CONNECTING       1
-#define STATUS_READY            2
-#define STATUS_ACTIVE           3
-#define STATUS_ERROR            4
+#define STATUS_READY            1
+#define STATUS_ACTIVE           2
+#define STATUS_ERROR            3
 
 #ifdef TAPE_SUPPORT
 
@@ -167,7 +166,10 @@ enum {
 
 extern volatile uint8_t eoi;
 extern volatile bool doDeviceReset;
-extern volatile bool device_running;
+
+// Board status handling
+uint8_t get_status(void);
+void set_status(uint8_t status);
 
 // USB IO functions and command handlers
 int8_t usbHandleControl(uint8_t cmd, uint8_t *replyBuf);
